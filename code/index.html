@@ -8,7 +8,7 @@
 </head>
 <body ng-controller="MainCtrl">
     <h3>Current User</h3>
-    <select class="form-control" ng-model="currentUser" ng-options="user.user_id as user.last_name for user in users">
+    <select class="form-control" ng-model="currentUser" ng-options="user.last_name  for (obj, user) in users">
         <option value="">Select a user</option>
     </select>
 

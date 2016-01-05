@@ -51,9 +51,11 @@ app.directive('item', ['$firebaseObject', 'FIREBASE_URI', 'ItemsService',
         };
     }]);
 
-app.factory('UsersService', ['$firebaseArray', 'FIREBASE_URI', function ($firebaseArray, FIREBASE_URI) {
-    var usersRef = new Firebase(FIREBASE_URI + 'users');
+app.factory('UsersService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI', function ($firebaseArray,$firebaseObject, FIREBASE_URI) {
+    var ref = new Firebase(FIREBASE_URI);
+    var usersRef = ref.child('users');
     var users = $firebaseArray(usersRef);
+
     var currentUser = null;
 
     var getUsers = function () {
@@ -69,12 +71,18 @@ app.factory('UsersService', ['$firebaseArray', 'FIREBASE_URI', function ($fireba
     };
 
     var getItemsForCurrentUser = function () {
-        return users.$child(currentUser + '/items/');
+        return $firebaseArray(usersRef.child(currentUser.user_id).child('items'));
+
     };
 
     var addItemForCurrentUser = function (itemRef) {
-        var child = users.$child(currentUser + '/items/' + itemRef.name());
-        child.$set(true);
+        //FIX-ME  add name from item ref to firebase array of item references
+        var child = users.$child(currentUser + '/items/' + itemRef.name()); // old code
+        child.$set(trueegg);                                                // old code
+
+        var items = $firebaseArray(usersRef.child(currentUser.user_id).child('items'));
+        var mychild = $firebaseObject(users.child(currentUser + '/items/' + itemRef.name()) );
+        mychild.$set(true);
     };
 
     var removeItemForCurrentUser = function (itemId) {

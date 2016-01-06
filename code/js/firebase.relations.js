@@ -2,20 +2,32 @@ var app = angular.module('egghead', ['firebase']);
 
 app.constant('FIREBASE_URI', 'https://dbs-project.firebaseio.com/');
 
-app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService',
-    function ($scope, ItemsService, UsersService) {
+app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'OrganizationsService',
+    function ($scope, ItemsService, UsersService,OrganizationsService) {
         $scope.newItem = { name: '', description: '', count: 0 };
         $scope.currentItem = null;
         $scope.currentUser = null;
         $scope.items = null;
+        $scope.currentOrg = null;
+        $scope.currentUserOrg = null;
+
+        $scope.organizations = OrganizationsService.getOrganizations();
 
         $scope.users = UsersService.getUsers();
+
+        $scope.$watch('currentOrg', function () {
+            OrganizationsService.setCurrentOrganization($scope.currentOrg);
+
+           if ($scope.currentOrg) {
+                $scope.users = OrganizationsService.getUsersForCurrentOrganization();
+           }
+        });
 
         $scope.$watch('currentUser', function () {
             UsersService.setCurrentUser($scope.currentUser);
 
             if ($scope.currentUser) {
-                $scope.items = UsersService.getItemsForCurrentUser();
+                $scope.currentUserOrg = UsersService.getOrganizationForCurrentUser();
             }
         });
 
@@ -70,6 +82,20 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI',
         currentUser = user;
     };
 
+    var getOrganizationForCurrentUser = function () {
+        //var org = $firebaseArray(usersRef.child(currentUser.user_id).child('users'));
+        var org = null;
+         org = $firebaseObject( usersRef.child(currentUser.user_id).child('organizations'));
+        org.$loaded().then(function() {
+            console.log("loaded record:", org.$id);
+            return org;
+        });
+
+
+
+
+    };
+
     var getItemsForCurrentUser = function () {
         return $firebaseArray(usersRef.child(currentUser.user_id).child('items'));
 
@@ -93,9 +119,47 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI',
         getUsers: getUsers,
         getCurrentUser: getCurrentUser,
         setCurrentUser: setCurrentUser,
+        getOrganizationForCurrentUser: getOrganizationForCurrentUser,
         getItemsForCurrentUser: getItemsForCurrentUser,
         addItemForCurrentUser: addItemForCurrentUser,
         removeItemForCurrentUser: removeItemForCurrentUser
+    }
+}]);
+
+app.factory('OrganizationsService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI', function ($firebaseArray,$firebaseObject, FIREBASE_URI) {
+    var ref = new Firebase(FIREBASE_URI);
+    var organizationsRef = ref.child('organizations');
+    var organizations = $firebaseArray(organizationsRef);
+
+    var currentOrg = null;
+
+    var getOrganizations = function () {
+        return organizations;
+    };
+
+    var getCurrentOrganization = function () {
+        return currentOrg;
+    };
+
+    var setCurrentOrganization = function (organization) {
+        currentOrg = organization;
+    };
+
+
+    var getUsersForCurrentOrganization = function () {
+        var users = $firebaseArray(organizationsRef.child(currentOrg.org_id).child('users'));
+        // var users = $firebaseObject(organizationsRef.child(currentOrg.org_id).child('organizations'));
+        return users;
+
+    };
+
+
+    return {
+        getOrganizations: getOrganizations,
+        getCurrentOrganization: getCurrentOrganization,
+        setCurrentOrganization: setCurrentOrganization,
+        getUsersForCurrentOrganization : getUsersForCurrentOrganization
+
     }
 }]);
 

@@ -7,11 +7,20 @@
     <link rel="stylesheet" href="css/firebase.css"/>
 </head>
 <body ng-controller="MainCtrl">
+<h3>Load input file:</h3>
+<p>-----------</p>
+<h3>Current Company</h3>
+<select class="form-control" ng-model="currentOrg" ng-options="org.name  for (obj, org) in organizations">
+    <option value="">Select a company</option>
+</select>
+<p>current company is : {{currentOrg}}</p>
+
     <h3>Current User</h3>
     <select class="form-control" ng-model="currentUser" ng-options="user.last_name  for (obj, user) in users">
         <option value="">Select a user</option>
     </select>
 
+<div class="well">
     <div ng-if="currentUser">
         <p>current user is : {{currentUser}}</p>
         <h3>Items</h3>
@@ -36,6 +45,7 @@
             </tbody>
         </table>
     </div>
+</div>
 
     <div class="well" ng-if="currentUser">
         <h4>Add Item</h4>
@@ -61,6 +71,8 @@
 
     <!-- AngularJS -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.6/angular.min.js"></script>
+
+
 
     <!-- Firebase -->
     <script src="https://cdn.firebase.com/js/client/2.3.0/firebase.js"></script>

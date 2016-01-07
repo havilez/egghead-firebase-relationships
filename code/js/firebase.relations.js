@@ -66,6 +66,7 @@ app.directive('item', ['$firebaseObject', 'FIREBASE_URI', 'ItemsService',
 app.factory('UsersService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI', function ($firebaseArray,$firebaseObject, FIREBASE_URI) {
     var ref = new Firebase(FIREBASE_URI);
     var usersRef = ref.child('users');
+    var organizationsRef = ref.child('organizations');
     var users = $firebaseArray(usersRef);
 
     var currentUser = null;
@@ -85,11 +86,15 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI',
     var getOrganizationForCurrentUser = function () {
         //var org = $firebaseArray(usersRef.child(currentUser.user_id).child('users'));
         var org = null;
-         org = $firebaseObject( usersRef.child(currentUser.user_id).child('organizations'));
-        org.$loaded().then(function() {
-            console.log("loaded record:", org.$id);
-            return org;
-        });
+
+        var coll = new Firebase.util.NormalizedCollection(
+            usersRef.child(currentUser.user_id).child('organization'),
+            organizationsRef
+        ).select('organizations.name').ref()
+
+        coll.on('value', function (orgName) {
+            console.log('orgName =',orgName);
+        })
 
 
 

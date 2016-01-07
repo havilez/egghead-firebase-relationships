@@ -63,7 +63,7 @@ app.directive('item', ['$firebaseObject', 'FIREBASE_URI', 'ItemsService',
         };
     }]);
 
-app.factory('UsersService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI', function ($firebaseArray,$firebaseObject, FIREBASE_URI) {
+app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIREBASE_URI', function ($firebaseArray,$firebaseObject, $timeout,FIREBASE_URI) {
     var ref = new Firebase(FIREBASE_URI);
     var usersRef = ref.child('users');
     var organizationsRef = ref.child('organizations');
@@ -84,19 +84,33 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI',
     };
 
     var getOrganizationForCurrentUser = function () {
-        //var org = $firebaseArray(usersRef.child(currentUser.user_id).child('users'));
-        var org = null;
+        var currentUserOrg=null;
+        var orgRef = usersRef.child(currentUser.$id).child('organization');
+        Firebase.util.logLevel('debug');
+        orgRef.on('value', function (snapshot) {
+          //  $timeout(function () {
+                console.log(snapshot.hasChildren());
+                var mySnapshot = snapshot.val();
+                var get = mySnapshot.property;
+                var propertyName = snapshot.key();
+            var uid = snapshot.child("uid").val();
+                return currentUserOrg = mySnapshot;
+           // })
+        
+        });
 
+  /**
         var coll = new Firebase.util.NormalizedCollection(
             usersRef.child(currentUser.user_id).child('organization'),
             organizationsRef
-        ).select('organizations.name').ref()
+        );
+        coll.select( 'organization', 'organizations.name', {"key":"organizations.$value"} ).ref()
 
         coll.on('value', function (orgName) {
             console.log('orgName =',orgName);
         })
 
-
+**/
 
 
     };

@@ -26,9 +26,16 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
         $scope.$watch('currentUser', function () {
             UsersService.setCurrentUser($scope.currentUser);
 
+            var userOrg = null;
+
             if ($scope.currentUser) {
-                $scope.currentUserOrg = UsersService.getOrganizationForCurrentUser();
-               $scope.currentOrg = $scope.currentUserOrg;
+                 userOrg = UsersService.getOrganizationForCurrentUser();
+
+                // retrieve user org object and display details
+
+                // set current org to update org list box
+                $scope.currentOrg = userOrg;
+
             }
         });
 
@@ -131,21 +138,6 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
 
 **/
 
-      /****
-  // now that you have organization name for user
-  // find corresponding organization object and return it
-    var currentOrgRef  =  organizationsRef.child(currentUserOrgName);
-    var orgKey = null;
-    var orgData =  null;
-    currentOrgRef.once('value', function (snapshot) {
-         orgKey = snapshot.key();
-        // data will be the actual contents of the child
-        orgData = snapshot.val();
-
-    })
-    currentUserOrg = orgData;
-
-       ****/
 
   return currentUserOrgName;
 
@@ -202,11 +194,36 @@ app.factory('OrganizationsService', ['$firebaseArray', '$firebaseObject','FIREBA
 
 
     var getUsersForCurrentOrganization = function () {
-        var users = $firebaseArray(organizationsRef.child(currentOrg.org_id).child('users'));
+        // retrieve org object via reference then find list of users if any
+
+        // is this necessary???????
+        var  userOrg  = getOrganization(currentOrg);
+
+        /////////////////////////
+
+        var users = $firebaseArray(organizationsRef.child(currentOrg).child('users'));
         // var users = $firebaseObject(organizationsRef.child(currentOrg.org_id).child('organizations'));
+        if ( !users )
+            return null;
+
         return users;
 
     };
+
+    var getOrganization = function( orgName ) {
+        // now that you have organization name for user
+        // find corresponding organization object and return it
+        var currentOrgRef  =  organizationsRef.child( orgName);
+        var orgKey = null;
+        var orgData =  null;
+        currentOrgRef.once('value', function (snapshot) {
+            orgKey = snapshot.key();
+            // data will be the actual contents of the child
+            orgData = snapshot.val();
+        }
+        return  orgData;
+    }
+
 
 
     return {

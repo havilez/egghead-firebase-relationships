@@ -28,6 +28,7 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
 
             if ($scope.currentUser) {
                 $scope.currentUserOrg = UsersService.getOrganizationForCurrentUser();
+               $scope.currentOrg = $scope.currentUserOrg;
             }
         });
 
@@ -70,6 +71,7 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
     var users = $firebaseArray(usersRef);
 
     var currentUser = null;
+    var currentOrg = null;
 
     var getUsers = function () {
         return users;
@@ -84,17 +86,34 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
     };
 
     var getOrganizationForCurrentUser = function () {
-        var currentUserOrg=null;
-        var orgRef = usersRef.child(currentUser.$id).child('organization');
+        var currentUserOrgName=null;
+        var userOrgRef = usersRef.child(currentUser.$id).child('organizations');
+
+
+        var childKey = null;
+        var childData = null;
+
         Firebase.util.logLevel('debug');
-        orgRef.on('value', function (snapshot) {
+        userOrgRef.once('value', function (snapshot) {
           //  $timeout(function () {
-                console.log(snapshot.hasChildren());
-                var mySnapshot = snapshot.val();
-                var get = mySnapshot.property;
-                var propertyName = snapshot.key();
-            var uid = snapshot.child("uid").val();
-                return currentUserOrg = mySnapshot;
+            var snapShotRef  = snapshot.ref();
+            var snapShotData = snapshot.val();
+
+            var childSnapshot = null;
+
+          //  if ( snapshot.hasChildren())
+                snapshot.forEach(function (childSnapshot) {
+                    childKey = childSnapshot.key();
+                    // childData will be the actual contents of the child
+                    childData = childSnapshot.val();
+
+                })
+
+               console.log('key= ', childKey);
+               console.log('data= ',childData);
+
+
+                 currentUserOrgName = childKey;
            // })
         
         });
@@ -112,6 +131,23 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
 
 **/
 
+      /****
+  // now that you have organization name for user
+  // find corresponding organization object and return it
+    var currentOrgRef  =  organizationsRef.child(currentUserOrgName);
+    var orgKey = null;
+    var orgData =  null;
+    currentOrgRef.once('value', function (snapshot) {
+         orgKey = snapshot.key();
+        // data will be the actual contents of the child
+        orgData = snapshot.val();
+
+    })
+    currentUserOrg = orgData;
+
+       ****/
+
+  return currentUserOrgName;
 
     };
 

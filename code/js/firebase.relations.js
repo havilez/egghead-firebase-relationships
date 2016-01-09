@@ -10,6 +10,7 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
         $scope.items = null;
         $scope.currentOrg = null;
         $scope.currentUserOrg = null;
+        $scope.currentOrgUsers = [];
 
         $scope.organizations = OrganizationsService.getOrganizations();
 
@@ -19,25 +20,33 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
             OrganizationsService.setCurrentOrganization($scope.currentOrg);
 
            if ($scope.currentOrg) {
-                $scope.users = OrganizationsService.getUsersForCurrentOrganization();
+                $scope.currentOrgUsers = OrganizationsService.getUsersForCurrentOrganization();
+               // FIX-ME display list of users in ng-if
            }
         });
 
         $scope.$watch('currentUser', function () {
-            UsersService.setCurrentUser($scope.currentUser);
+            if ( $scope.currentUser ) {
+                UsersService.setCurrentUser($scope.currentUser);
 
-            var userOrg = null;
+                var userOrg = null;
 
-            if ($scope.currentUser) {
-                 userOrg = UsersService.getOrganizationForCurrentUser();
+                if ($scope.currentUser) {
+                    userOrg = UsersService.getOrganizationForCurrentUser();
+                    currentUserOrgName = userOrg.$id;
 
-                // retrieve user org object and display details
+                    // retrieve user org object and display details
 
-                // set current org to update org list box
-                $scope.currentOrg = userOrg;
+                    // set current org to update org list box
+                    $scope.currentOrg = userOrg;
 
+                }
             }
-        });
+            else {
+                $scope.users = UsersService.getUsers();
+            }
+        })
+
 
         $scope.addItem = function () {
             ItemsService.addItem(angular.copy($scope.newItem));
@@ -71,7 +80,7 @@ app.directive('item', ['$firebaseObject', 'FIREBASE_URI', 'ItemsService',
         };
     }]);
 
-app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIREBASE_URI', function ($firebaseArray,$firebaseObject, $timeout,FIREBASE_URI) {
+app.factory('UsersService', ['$firebaseArray', '$firebaseObject','OrganizationsService','$timeout','FIREBASE_URI', function ($firebaseArray,$firebaseObject,OrganizationsService, $timeout,FIREBASE_URI) {
     var ref = new Firebase(FIREBASE_URI);
     var usersRef = ref.child('users');
     var organizationsRef = ref.child('organizations');
@@ -79,10 +88,29 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
 
     var currentUser = null;
     var currentOrg = null;
+    var currentOrgUsersList = [];
 
     var getUsers = function () {
         return users;
     };
+
+    var getUser = function( userName ) {
+        var userRef  =  organizationsRef.child( userName);
+        var userKey = null;
+        var userData =  null;
+
+
+        userRef.once('value', function (snapshot) {
+            // $timeout(function () {
+            userKey = snapshot.key();
+            userData = snapshot.val();
+            //  })
+
+        });
+
+        return(userData);
+
+    }
 
     var getCurrentUser = function () {
         return currentUser;
@@ -93,7 +121,8 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
     };
 
     var getOrganizationForCurrentUser = function () {
-        var currentUserOrgName=null;
+        var currentUserOrgName= null;
+        var currentUserOrg=null;
         var userOrgRef = usersRef.child(currentUser.$id).child('organizations');
 
 
@@ -103,7 +132,7 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
         Firebase.util.logLevel('debug');
         userOrgRef.once('value', function (snapshot) {
           //  $timeout(function () {
-            var snapShotRef  = snapshot.ref();
+            var snapShotkey  = snapshot.key();
             var snapShotData = snapshot.val();
 
             var childSnapshot = null;
@@ -125,6 +154,10 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
         
         });
 
+        //FIX-ME: shd use key to call org service getorg to retieve org object
+        OrganizationsService.setCurrentOrgName( currentUserOrgName );
+        currentUserOrg = OrganizationsService.getOrganization(currentUserOrgName);
+
   /**
         var coll = new Firebase.util.NormalizedCollection(
             usersRef.child(currentUser.user_id).child('organization'),
@@ -139,7 +172,7 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
 **/
 
 
-  return currentUserOrgName;
+    return currentUserOrg;
 
     };
 
@@ -164,6 +197,7 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
 
     return {
         getUsers: getUsers,
+        getUser: getUser,
         getCurrentUser: getCurrentUser,
         setCurrentUser: setCurrentUser,
         getOrganizationForCurrentUser: getOrganizationForCurrentUser,
@@ -173,10 +207,13 @@ app.factory('UsersService', ['$firebaseArray', '$firebaseObject','$timeout','FIR
     }
 }]);
 
-app.factory('OrganizationsService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI', function ($firebaseArray,$firebaseObject, FIREBASE_URI) {
+app.factory('OrganizationsService', ['$firebaseArray', '$firebaseObject','FIREBASE_URI', function ($firebaseArray,$firebaseObject,  FIREBASE_URI) {
     var ref = new Firebase(FIREBASE_URI);
     var organizationsRef = ref.child('organizations');
+    var usersRef = ref.child('users');
     var organizations = $firebaseArray(organizationsRef);
+    var currentOrgUsersList = [];
+
 
     var currentOrg = null;
 
@@ -195,20 +232,65 @@ app.factory('OrganizationsService', ['$firebaseArray', '$firebaseObject','FIREBA
 
     var getUsersForCurrentOrganization = function () {
         // retrieve org object via reference then find list of users if any
+        var snapShotRef = null, snapShotData= null, userListRef = null, userRef = null;
+       // var currentOrgUsersList = [];
 
-        // is this necessary???????
-        var  userOrg  = getOrganization(currentOrg);
 
-        /////////////////////////
 
-        var users = $firebaseArray(organizationsRef.child(currentOrg).child('users'));
+
+
+        userListRef = organizationsRef.child(getCurrentOrgName()).child('users');
         // var users = $firebaseObject(organizationsRef.child(currentOrg.org_id).child('organizations'));
-        if ( !users )
+
+        userListRef.once('value', function (snapshot) {
+            //  $timeout(function () {
+            var snapShotkey  = snapshot.key();
+            var snapShotData = snapshot.val();
+
+            var childSnapshot = null;
+            var userObj = null;
+            currentOrgUsersList.length = 0;
+
+            //  if ( snapshot.hasChildren())
+            snapshot.forEach(function (childSnapshot) {
+                childKey = childSnapshot.key();
+                // childData will be the actual contents of the child
+                childData = childSnapshot.val();
+
+                // retrieve each user name in list and get corresponding firebase users object and add to list
+
+               userObj =  getUser( childKey );
+               currentOrgUsersList.push( userObj );
+
+            })
+
+
+            // })
+
+        });
+        if ( !currentOrgUsersList.length )
             return null;
 
-        return users;
+        return currentOrgUsersList;
 
     };
+
+    var getUser = function( userName ){
+        var userRef  =  usersRef.child( userName);
+        var userKey = null;
+        var userData =  null;
+
+
+        userRef.once('value', function (snapshot) {
+            // $timeout(function () {
+            userKey = snapshot.key();
+            userData = snapshot.val();
+            //  })
+
+        });
+
+        return(userData);
+    }
 
     var getOrganization = function( orgName ) {
         // now that you have organization name for user
@@ -216,13 +298,27 @@ app.factory('OrganizationsService', ['$firebaseArray', '$firebaseObject','FIREBA
         var currentOrgRef  =  organizationsRef.child( orgName);
         var orgKey = null;
         var orgData =  null;
+
+
         currentOrgRef.once('value', function (snapshot) {
-            orgKey = snapshot.key();
-            // data will be the actual contents of the child
-            orgData = snapshot.val();
-        }
-        return  orgData;
-    }
+           // $timeout(function () {
+                orgKey = snapshot.key();
+                orgData = snapshot.val();
+          //  })
+
+        });
+
+        return(orgData);
+
+    };
+
+    var setCurrentOrgName= function( orgName) {
+        organizationName = orgName;
+    };
+
+    var getCurrentOrgName = function() {
+        return organizationName;
+    };
 
 
 
@@ -230,7 +326,10 @@ app.factory('OrganizationsService', ['$firebaseArray', '$firebaseObject','FIREBA
         getOrganizations: getOrganizations,
         getCurrentOrganization: getCurrentOrganization,
         setCurrentOrganization: setCurrentOrganization,
-        getUsersForCurrentOrganization : getUsersForCurrentOrganization
+        getUsersForCurrentOrganization : getUsersForCurrentOrganization,
+        getOrganization: getOrganization,
+        getCurrentOrgName: getCurrentOrgName,
+        setCurrentOrgName: setCurrentOrgName
 
     }
 }]);

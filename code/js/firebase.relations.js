@@ -27,17 +27,19 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
 
         $scope.$watch('currentOrg', function () {
 
-            if ($scope.currentOrg ) {
+            if ($scope.currentOrg && $scope.currentOrg.$id )
                 OrganizationsService.setCurrentOrgName($scope.currentOrg.$id)
-            }
-
-            OrganizationsService.setCurrentOrganization($scope.currentOrg);
 
 
-           if ($scope.currentOrg) {
-                $scope.currentOrgUsers = OrganizationsService.getUsersForCurrentOrganization();
+                OrganizationsService.setCurrentOrganization($scope.currentOrg);
 
-           }
+
+                if ($scope.currentOrg) {
+                    $scope.currentOrgUsers = OrganizationsService.getUsersForCurrentOrganization();
+
+                }
+
+
         });
 
         $scope.$watch('currentUser', function () {

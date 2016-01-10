@@ -26,11 +26,17 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
         $scope.users = UsersService.getUsers();
 
         $scope.$watch('currentOrg', function () {
+
+            if ($scope.currentOrg ) {
+                OrganizationsService.setCurrentOrgName($scope.currentOrg.$id)
+            }
+
             OrganizationsService.setCurrentOrganization($scope.currentOrg);
+
 
            if ($scope.currentOrg) {
                 $scope.currentOrgUsers = OrganizationsService.getUsersForCurrentOrganization();
-               // FIX-ME display list of users in ng-if
+
            }
         });
 
@@ -42,7 +48,8 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
 
                 if ($scope.currentUser) {
                     userOrg = UsersService.getOrganizationForCurrentUser();
-                    currentUserOrgName = userOrg.$id;
+                    OrganizationsService.getCurrentOrgName()
+
 
                     // retrieve user org object and display details
 

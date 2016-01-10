@@ -1,4 +1,4 @@
-var app = angular.module('egghead', ['firebase']);
+var app = angular.module('egghead', ['ui.grid','firebase']);
 
 app.constant('FIREBASE_URI', 'https://dbs-project.firebaseio.com/');
 
@@ -11,6 +11,15 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
         $scope.currentOrg = null;
         $scope.currentUserOrg = null;
         $scope.currentOrgUsers = [];
+        $scope.gridOptions = {
+            columnDefs: [
+                {name: 'firstName', field:'first_name'},
+                {name: 'lastName',  field: 'last_name'},
+                {name: 'Email' , field:'email'},
+                {name: 'phoneNumber', field: 'phone'}
+            ]
+        };
+      $scope.gridOptions.data = 'currentOrgUsers';
 
         $scope.organizations = OrganizationsService.getOrganizations();
 

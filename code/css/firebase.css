@@ -46,3 +46,8 @@ body {
     font-weight: bold;
     color: inherit;
 }
+
+.orgUsers {
+    width: 500px;
+    height: 250px;
+}

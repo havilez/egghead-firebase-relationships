@@ -7,14 +7,24 @@
     <link rel="stylesheet" href="css/firebase.css"/>
 </head>
 <body ng-controller="MainCtrl">
-<h3>Load input file:</h3>
-<p>-----------</p>
+
 <h3>Current Company</h3>
 <select class="form-control" ng-model="currentOrg" ng-options="org.name  for (obj, org) in organizations">
     <option value="">Select a company</option>
 </select>
 <div class="well">
     <div ng-if="currentOrg">
+        <form novalidate class="currentUserForm">
+            FirstName: <input type="text" ng-readonly="true" ng-model="currentUser.first_name"/>
+            LastName: <input type="text" ng-readonly="true"  ng-model="currentUser.last_name"/>
+            E-mail:  <input type="text" ng-readonly="true" ng-model="currentUser.email"/>
+            UserId:  <input  type="text" ng-readonly="true"  ng-model="currentUser.user_id"/> <br />
+            Company: <input  type="text" ng-readonly="true" ng-model="currentOrg.name" /> <br />
+            Address: <input type="text "  ng-readonly="true"  ng-model="currentOrg.address.street"/>
+                    <input type="text"  ng-readonly="true"  ng-model="currentOrg.address.city" />
+                    <input  type="text"  ng-readonly="true" ng-model="currentOrg.address.state"/>
+                     <input  type="text"  ng-readonly="true" ng-model="currentOrg.address.zipCode"/>
+        </form>
         <p>current company is : {{currentOrg}}</p>
         <div ui-grid="gridOptions" class="orgUsers"></div>
     </div>
@@ -27,31 +37,11 @@
 <div class="well">
     <div ng-if="currentUser">
         <p>current user is : {{currentUser}}</p>
-        <h3>Items</h3>
-        <table class="table edit">
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Count</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr item item-id="{{id}}" ng-repeat="(id, item) in items">
-                <td><input type="text" ng-model="myItem.name" ng-blur="updateItem()"/></td>
-                <td><input type="text" ng-model="myItem.description" ng-blur="updateItem()"/></td>
-                <td><input type="text" ng-model="myItem.count" ng-blur="updateItem()"/></td>
-                <td>
-                    <a href="#" ng-click="removeItem(id)" class="navbar-link">Remove</a>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+
     </div>
 </div>
 
-    <div class="well" ng-if="currentUser">
+    <div class="well" ng-if="currentItem">
         <h4>Add Item</h4>
 
         <form class="form-inline" role="form" novalidate ng-submit="addItem()">
@@ -91,5 +81,12 @@
     <!-- angular ui-grid  -->
     <link rel="stylesheet" type="text/css" href="bower_components/angular-ui-grid/ui-grid.min.css">
     <script src="bower_components/angular-ui-grid/ui-grid.min.js"></script>
+
+    <!-- angular-formly  ---->
+    <!-- script src="bower_components/angular-formly-templates-bootstrap/scripts/webpack-overrides.js"></script-->
+    <!-- script src="bower_components/angular-formly-templates-bootstrap/dist/angular-formly-templates-bootstrap.min.js"></script -->
+    <!-- script src="bower_components/angular-formly/dist/formly.min.js"></script  -->
+
+
 </body>
 </html>

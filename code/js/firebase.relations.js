@@ -37,6 +37,9 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
                 if ($scope.currentOrg) {
                     $scope.currentOrgUsers = OrganizationsService.getUsersForCurrentOrganization();
 
+                    //FIX-ME
+                    // join users with their roles and entitlements
+
                 }
 
 
@@ -62,6 +65,11 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
             }
             else {
                 $scope.users = UsersService.getUsers();
+
+                //FIX-ME
+                // join users with their roles an entitlements
+                // first just retrieve corresponding entitlements for a given user
+                // second try using firebaseutil to implemt a join between user roles and roles and entitlements
             }
         })
 
@@ -251,7 +259,7 @@ app.factory('OrganizationsService', ['$firebaseArray', '$firebaseObject','FIREBA
     var getUsersForCurrentOrganization = function () {
         // retrieve org object via reference then find list of users if any
         var snapShotRef = null, snapShotData= null, userListRef = null, userRef = null;
-       // var currentOrgUsersList = [];
+
 
 
 
@@ -352,6 +360,9 @@ app.factory('OrganizationsService', ['$firebaseArray', '$firebaseObject','FIREBA
     }
 }]);
 
+
+
+
 app.factory('ItemsService', ['$firebaseObject', 'FIREBASE_URI', 'UsersService',
     function ($firebaseObject, FIREBASE_URI, UsersService) {
         var itemsRef = new Firebase(FIREBASE_URI + 'items');
@@ -379,3 +390,18 @@ app.factory('ItemsService', ['$firebaseObject', 'FIREBASE_URI', 'UsersService',
             removeItem: removeItem
         }
     }]);
+
+
+app.factory('RolesEntitlementsService', ['$firebaseArray', '$firebaseObject','OrganizationsService','$timeout','FIREBASE_URI', function ($firebaseArray,$firebaseObject,OrganizationsService, $timeout,FIREBASE_URI) {
+    var ref = new Firebase(FIREBASE_URI);
+    var usersRef = ref.child('users');
+    var roleEntitlementsRef = ref.child('userRoleEntitlements');
+    var users = $firebaseArray(usersRef);
+    var roleEntitlements = $firebaseArray(roleEntitlementsRef);
+
+    var  list = roleEntitlements;
+
+    var currentUser = null;
+
+
+}]);

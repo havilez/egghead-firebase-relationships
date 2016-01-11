@@ -2,8 +2,8 @@ var app = angular.module('egghead', ['ui.grid','firebase']);
 
 app.constant('FIREBASE_URI', 'https://dbs-project.firebaseio.com/');
 
-app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'OrganizationsService',
-    function ($scope, ItemsService, UsersService,OrganizationsService) {
+app.controller('MainCtrl', ['$scope', 'EntitlementsService','ItemsService', 'UsersService', 'OrganizationsService',
+    function ($scope, EntitlementsService, ItemsService, UsersService,OrganizationsService) {
         $scope.newItem = { name: '', description: '', count: 0 };
         $scope.currentItem = null;
         $scope.currentUser = null;
@@ -11,6 +11,8 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
         $scope.currentOrg = null;
         $scope.currentUserOrg = null;
         $scope.currentOrgUsers = [];
+        $scope.currentUserRoleEntitlements =[];
+
         $scope.gridOptions = {
             columnDefs: [
                 {name: 'firstName', field:'first_name'},
@@ -61,16 +63,17 @@ app.controller('MainCtrl', ['$scope', 'ItemsService', 'UsersService', 'Organizat
                     // set current org to update org list box
                     $scope.currentOrg = userOrg;
 
+                    //FIX-ME
+                    // join users with their roles an entitlements
+                    // first just retrieve corresponding entitlements for a given user
+                    // second try using firebaseutil to implemt a join between user roles and roles and entitlements
+                  $scope.currentUserRoleEntitlements = EntitlementsService.getCurrentUserRoleEntitlements($scope.currentUser);
                 }
             }
             else {
                 $scope.users = UsersService.getUsers();
-
-                //FIX-ME
-                // join users with their roles an entitlements
-                // first just retrieve corresponding entitlements for a given user
-                // second try using firebaseutil to implemt a join between user roles and roles and entitlements
             }
+
         })
 
 
@@ -392,16 +395,85 @@ app.factory('ItemsService', ['$firebaseObject', 'FIREBASE_URI', 'UsersService',
     }]);
 
 
-app.factory('RolesEntitlementsService', ['$firebaseArray', '$firebaseObject','OrganizationsService','$timeout','FIREBASE_URI', function ($firebaseArray,$firebaseObject,OrganizationsService, $timeout,FIREBASE_URI) {
-    var ref = new Firebase(FIREBASE_URI);
-    var usersRef = ref.child('users');
-    var roleEntitlementsRef = ref.child('userRoleEntitlements');
-    var users = $firebaseArray(usersRef);
-    var roleEntitlements = $firebaseArray(roleEntitlementsRef);
 
-    var  list = roleEntitlements;
+app.factory('EntitlementsService',  ['$firebaseArray', '$firebaseObject','FIREBASE_URI',
+    function ($firebaseArray,$firebaseObject, FIREBASE_URI) {
 
-    var currentUser = null;
+        var ref = new Firebase(FIREBASE_URI);
+        var usersRef = ref.child('users');
+        var roleEntitlementsRef = ref.child('userRoleEntitlements');
+        var users = $firebaseArray(usersRef);
+        var roleEntitlements = $firebaseArray(roleEntitlementsRef);
+        var currentUserEntitlementsList = null;
 
+
+        var  getCurrentUserRoleEntitlements = function(currentUser) {
+            var currentUserEntitlementsList = [];
+
+            //get list of roles from current user
+            var userRolesRef = usersRef.child(currentUser.$id).child('roles');
+
+            // loop thru user roles and resolve its reference in rolest and entitlements collecton
+            //  if ( snapshot.hasChildren())
+            userRolesRef.once('value', function (snapshot) {
+                //  $timeout(function () {
+                var snapShotkey  = snapshot.key();
+                var snapShotData = snapshot.val();
+
+                var childSnapshot = null;
+                var rolesEntitlementObj = null;
+                currentUserEntitlementsList.length = 0;
+
+                //  if ( snapshot.hasChildren())
+                snapshot.forEach(function (childSnapshot) {
+                    childKey = childSnapshot.key();
+                    // childData will be the actual contents of the child
+                    childData = childSnapshot.val();
+
+                    // retrieve each user name in list and get corresponding firebase users object and add to list
+
+                    rolesEntitlementObj =  getRoleEntitlements( childKey );
+                    currentUserEntitlementsList.push( rolesEntitlementObj );
+
+                })
+
+
+                // })
+
+            });
+
+            //if (! currentUserEntitlementsList.length)
+              //  return null;
+
+            //FIX-ME: index containing set of objects matches index in roles array for current user
+            // user.roles[i] is has entitlements[i]
+            return   currentUserEntitlementsList;
+        }
+
+        var getRoleEntitlements = function (roleName) {
+            var roleEntitlementRef = roleEntitlementsRef.child(roleName);
+            var roleKey = null;
+            var roleData = null;
+
+
+            roleEntitlementRef.once('value', function (snapshot) {
+                // $timeout(function () {
+                roleKey = snapshot.key();
+                roleData = snapshot.val();
+                //  })
+
+            });
+
+            return (roleData);
+
+        }
+
+
+        return {
+            getCurrentUserRoleEntitlements : getCurrentUserRoleEntitlements,
+            getRoleEntitlements :  getRoleEntitlements
+
+    }
 
 }]);
+

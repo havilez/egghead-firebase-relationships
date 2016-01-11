@@ -13,7 +13,7 @@ app.controller('MainCtrl', ['$scope', 'EntitlementsService','ItemsService', 'Use
         $scope.currentOrgUsers = [];
         $scope.currentUserRoleEntitlements =[];
 
-        $scope.gridOptions = {
+        $scope.gridOptions1 = {
             columnDefs: [
                 {name: 'firstName', field:'first_name'},
                 {name: 'lastName',  field: 'last_name'},
@@ -21,7 +21,7 @@ app.controller('MainCtrl', ['$scope', 'EntitlementsService','ItemsService', 'Use
                 {name: 'phoneNumber', field: 'phone'}
             ]
         };
-      $scope.gridOptions.data = 'currentOrgUsers';
+      $scope.gridOptions1.data = 'currentOrgUsers';
 
         $scope.organizations = OrganizationsService.getOrganizations();
 

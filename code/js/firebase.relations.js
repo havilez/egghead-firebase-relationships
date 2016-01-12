@@ -432,7 +432,11 @@ app.factory('EntitlementsService',  ['$firebaseArray', '$firebaseObject','FIREBA
 
                     // retrieve each user name in list and get corresponding firebase users object and add to list
 
+
                     rolesEntitlementObj =  getRoleEntitlements( childKey );
+
+
+
                     currentUserEntitlementsList.push( rolesEntitlementObj );
 
                 })
@@ -455,16 +459,38 @@ app.factory('EntitlementsService',  ['$firebaseArray', '$firebaseObject','FIREBA
             var roleKey = null;
             var roleData = null;
 
+            var tempObj = new Object(); // used to flatten out role and entitlement structure
+            tempObj.role = roleName;
+            tempObj.entitlement = [];
 
             roleEntitlementRef.once('value', function (snapshot) {
                 // $timeout(function () {
                 roleKey = snapshot.key();
                 roleData = snapshot.val();
                 //  })
+                // retrieve list of entitlements
+                var i = 0;
+                snapshot.forEach(function (childSnapshot) {
+                    childKey = childSnapshot.key();
+                    // childData will be the actual contents of the child
+                    childData = childSnapshot.val();
 
-            });
+                    tempObj.entitlement[childKey] = childKey;
 
-            return (roleData);
+
+                    Object.keys(childData).forEach(function (key) {
+                        console.log(key);
+                        tempObj.entitlement[key]  =  childData[key];
+                    })
+
+                    i++;
+                })
+
+                });
+
+
+
+            return (tempObj);
 
         }
 

@@ -23,6 +23,19 @@ app.controller('MainCtrl', ['$scope', 'EntitlementsService','ItemsService', 'Use
         };
       $scope.gridOptions1.data = 'currentOrgUsers';
 
+    $scope.gridOptions2 = {
+        columnDefs: [
+            {name: 'Role', field: 'role'},
+            {name: 'Entitlement', field: 'name'},
+            {name: 'Read',   field: 'read'},
+            {name: 'Write', field: 'write'},
+            {name: 'Delete', field: 'delete'}
+
+        ]
+    };
+
+    $scope.gridOptions2 = 'currentUserRoleEntitlements';
+
         $scope.organizations = OrganizationsService.getOrganizations();
 
         $scope.users = UsersService.getUsers();
@@ -463,6 +476,7 @@ app.factory('EntitlementsService',  ['$firebaseArray', '$firebaseObject','FIREBA
             tempObj.role = roleName;
             tempObj.entitlement = [];
 
+
             roleEntitlementRef.once('value', function (snapshot) {
                 // $timeout(function () {
                 roleKey = snapshot.key();
@@ -471,19 +485,21 @@ app.factory('EntitlementsService',  ['$firebaseArray', '$firebaseObject','FIREBA
                 // retrieve list of entitlements
                 var i = 0;
                 snapshot.forEach(function (childSnapshot) {
+                    var entitlementObj = {};
                     childKey = childSnapshot.key();
                     // childData will be the actual contents of the child
                     childData = childSnapshot.val();
+                    var name = 'name';
 
-                    tempObj.entitlement[childKey] = childKey;
+                    entitlementObj['name'] = childKey;
 
 
                     Object.keys(childData).forEach(function (key) {
                         console.log(key);
-                        tempObj.entitlement[key]  =  childData[key];
+                        entitlementObj[key]  =  childData[key];
                     })
 
-                    i++;
+                    tempObj.entitlement.push( entitlementObj);
                 })
 
                 });

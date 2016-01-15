@@ -25,16 +25,15 @@ app.controller('MainCtrl', ['$scope', 'EntitlementsService','ItemsService', 'Use
 
     $scope.gridOptions2 = {
         columnDefs: [
-            {name: 'Role', field: 'role'},
             {name: 'Entitlement', field: 'name'},
+            {name: 'Delete', field: 'delete'},
             {name: 'Read',   field: 'read'},
-            {name: 'Write', field: 'write'},
-            {name: 'Delete', field: 'delete'}
+            {name: 'Write', field: 'write'}
 
         ]
     };
 
-    $scope.gridOptions2 = 'currentUserRoleEntitlements';
+    $scope.gridOptions2.data = 'currentUserEntitlements';
 
         $scope.organizations = OrganizationsService.getOrganizations();
 
@@ -81,6 +80,7 @@ app.controller('MainCtrl', ['$scope', 'EntitlementsService','ItemsService', 'Use
                     // first just retrieve corresponding entitlements for a given user
                     // second try using firebaseutil to implemt a join between user roles and roles and entitlements
                   $scope.currentUserRoleEntitlements = EntitlementsService.getCurrentUserRoleEntitlements($scope.currentUser);
+                    $scope.currentUserEntitlements =  $scope.currentUserRoleEntitlements[0].entitlement;;
                 }
             }
             else {
